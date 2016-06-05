@@ -56,9 +56,7 @@ cdef class UCI:
         if confdir is not None:
             cuci.uci_set_confdir(self._ctx, confdir)
 
-    def get(self, config, section, option):
-        '''look up option'''
-
+    cdef cuci.uci_package* _get_package(self, config):
         # have we loaded this package before?
         cdef cuci.uci_package* p = cuci.uci_lookup_package(self._ctx, config)
         if p is NULL:
@@ -66,16 +64,33 @@ cdef class UCI:
             cuci.uci_load(self._ctx, config, &p)
         if p is NULL:
             raise NoConfigError(config)
+        return p
+
+    cdef cuci.uci_section* _get_section(self, config, section):
+        cdef cuci.uci_package* p = self._get_package(config)
 
         # look up the section
         cdef cuci.uci_section* s = cuci.uci_lookup_section(self._ctx, p, section)
         if s is NULL:
             raise NoSectionError(section)
 
+        return s
+
+    cdef cuci.uci_option* _get_option(self, config, section, option):
+        cdef cuci.uci_section *s = self._get_section(config, section)
+
         # look up the option
         cdef cuci.uci_option* o = cuci.uci_lookup_option(self._ctx, s, option)
         if o is NULL:
             raise NoOptionError(option, section)
+
+        return o
+
+    def get(self, config, section, option):
+        '''get value of option'''
+
+        # look up the option
+        cdef cuci.uci_option* o = self._get_option(config, section, option)
 
         cdef object option_value
         cdef cuci.uci_element* e = NULL # cython complains if we don't put this here
