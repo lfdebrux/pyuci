@@ -5,7 +5,8 @@ cimport cuci
 
 from ConfigParser import Error, \
                          NoSectionError, \
-                         NoOptionError
+                         NoOptionError, \
+                         ParsingError
 
 
 class NoConfigError(Error):
@@ -34,6 +35,24 @@ cdef class Config:
         if confdir is not None:
             cuci.uci_set_confdir(self._ctx, confdir)
 
+    cdef int _next_element(self, cuci.uci_list* l, cuci.uci_element** e):
+        '''
+        uci_list* l is head of list
+
+        copies pointer to next element into e,
+        until the list loops back round to the head
+        '''
+        if e[0] is NULL:
+            e[0] = cuci.list_to_element(l.next)
+            return 1
+        else:
+            e[0] = cuci.list_to_element(e[0].list.next)
+
+        if &e[0].list is not l:
+            return 1
+        else:
+            return 0
+
     def get(self, config, section, option):
         '''look up option'''
 
@@ -51,10 +70,20 @@ cdef class Config:
             raise NoSectionError(section)
 
         # look up the option
-        cdef char* c_option_value = cuci.uci_lookup_option_string(self._ctx, s, option)
-        if c_option_value is NULL:
+        cdef cuci.uci_option* o = cuci.uci_lookup_option(self._ctx, s, option)
+        if o is NULL:
             raise NoOptionError(option, section)
 
-        cdef object option_value = c_option_value
-
-        return option_value
+        cdef object option_value
+        cdef cuci.uci_element* e = NULL # cython complains if we don't put this here
+        if o.type == cuci.UCI_TYPE_STRING:
+            option_value = o.v.string
+            return option_value
+        elif o.type == cuci.UCI_TYPE_LIST:
+            option_value = []
+            while self._next_element(&o.v.list, &e):
+                option_value.append(e.name)
+            return option_value
+        else:
+            # parsing error?
+            raise RuntimeError('option has invalid UCI_TYPE')

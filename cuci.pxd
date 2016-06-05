@@ -1,6 +1,19 @@
 from libcpp cimport bool
 
 cdef extern from "uci.h":
+
+	# uci linked list
+	#
+	cdef struct uci_list:
+		uci_list* next
+
+	cdef struct uci_element:
+		uci_list list
+		char* name
+
+	uci_element* list_to_element(uci_list*)
+
+	# uci tree element types
 	cdef struct uci_context:
 		pass
 
@@ -9,6 +22,18 @@ cdef extern from "uci.h":
 
 	cdef struct uci_section:
 		pass
+
+	cdef enum uci_option_type:
+		UCI_TYPE_STRING = 0
+		UCI_TYPE_LIST = 1
+
+	cdef union uci_option_union:
+		uci_list list
+		char* string
+
+	cdef struct uci_option:
+		uci_option_type type
+		uci_option_union v
 
 	uci_context* uci_alloc_context()
 	void uci_free_context(uci_context* ctx)
@@ -20,4 +45,4 @@ cdef extern from "uci.h":
 
 	uci_package* uci_lookup_package(uci_context* ctx, const char* package_name)
 	uci_section* uci_lookup_section(uci_context* ctx, uci_package* package, const char* section_name)
-	const char* uci_lookup_option_string(uci_context* ctx, uci_section* section, const char* option_name)
+	uci_option* uci_lookup_option(uci_context* ctx, uci_section* section, const char* option_name)
