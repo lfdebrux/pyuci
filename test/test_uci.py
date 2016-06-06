@@ -19,6 +19,9 @@ class TestUCI(unittest.TestCase):
     def test_no_option(self):
         self.assertRaises(uci.NoOptionError, self.c.get, 'example', 'test', 'baz')
 
+    def test_none_argument(self):
+        self.assertRaises(TypeError, self.c.get, None, None, None)
+
     def test_get_string(self):
         s = self.c.get('example', 'test', 'string')
         self.assertEqual(s, 'some value')
