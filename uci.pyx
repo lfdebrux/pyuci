@@ -86,6 +86,21 @@ cdef class UCI:
 
         return o
 
+    cdef object _get_option_value(self, cuci.uci_option* o):
+        cdef object option_value
+        cdef cuci.uci_element* e = NULL # cython complains if we don't put this here
+        if o.type == cuci.UCI_TYPE_STRING:
+            option_value = o.v.string
+            return option_value
+        elif o.type == cuci.UCI_TYPE_LIST:
+            option_value = []
+            while _next_element(&o.v.list, &e):
+                option_value.append(e.name)
+            return option_value
+        else:
+            # parsing error?
+            raise RuntimeError('option has invalid UCI_TYPE')
+
     def options(self, config, section):
         '''list of options in section'''
 
@@ -108,22 +123,23 @@ cdef class UCI:
         else:
             return True
 
+    def items(self, config, section):
+        '''return a list of (name, value) pairs for each option in the section'''
+
+        cdef cuci.uci_section* s = self._get_section(config, section)
+
+        cdef object items = []
+        cdef cuci.uci_element* e = NULL
+        cdef cuci.uci_option* o = NULL
+        while _next_element(&s.options, &e):
+            o = cuci.uci_to_option(e)
+            items.append((e.name, self._get_option_value(o)))
+
+        return items
+
     def get(self, config, section, option):
         '''get value of option'''
 
         # look up the option
         cdef cuci.uci_option* o = self._get_option(config, section, option)
-
-        cdef object option_value
-        cdef cuci.uci_element* e = NULL # cython complains if we don't put this here
-        if o.type == cuci.UCI_TYPE_STRING:
-            option_value = o.v.string
-            return option_value
-        elif o.type == cuci.UCI_TYPE_LIST:
-            option_value = []
-            while _next_element(&o.v.list, &e):
-                option_value.append(e.name)
-            return option_value
-        else:
-            # parsing error?
-            raise RuntimeError('option has invalid UCI_TYPE')
+        return self._get_option_value(o)

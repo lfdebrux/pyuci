@@ -26,6 +26,13 @@ class TestUCI(unittest.TestCase):
         self.assertTrue(self.c.has_option('example', 'test', 'string'))
         self.assertFalse(self.c.has_option('example', 'test', 'baz'))
 
+    def test_items(self):
+        self.assertEqual(
+                         self.c.items('example', 'test'),
+                         [('string', 'some value'),
+                          ('boolean', '1'),
+                          ('collection', ['first item', 'second item'])])
+
     def test_get_string(self):
         s = self.c.get('example', 'test', 'string')
         self.assertEqual(s, 'some value')

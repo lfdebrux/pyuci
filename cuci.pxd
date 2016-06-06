@@ -12,6 +12,7 @@ cdef extern from "uci.h":
 		char* name
 
 	uci_element* list_to_element(uci_list*)
+	uci_option* uci_to_option(uci_element*)
 
 	# uci tree element types
 	cdef struct uci_context:
