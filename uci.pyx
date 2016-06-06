@@ -98,6 +98,16 @@ cdef class UCI:
 
         return options
 
+    def has_option(self, config, section, option):
+        '''indicates whether the section has the named option'''
+
+        try:
+            self._get_option(config, section, option)
+        except NoOptionError:
+            return False
+        else:
+            return True
+
     def get(self, config, section, option):
         '''get value of option'''
 
