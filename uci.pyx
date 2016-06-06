@@ -56,7 +56,7 @@ cdef class UCI:
         if confdir is not None:
             cuci.uci_set_confdir(self._ctx, confdir)
 
-    cdef cuci.uci_package* _get_package(self, config):
+    cdef cuci.uci_package* _get_package(self, config) except NULL:
         # have we loaded this package before?
         cdef cuci.uci_package* p = cuci.uci_lookup_package(self._ctx, config)
         if p is NULL:
@@ -66,7 +66,7 @@ cdef class UCI:
             raise NoConfigError(config)
         return p
 
-    cdef cuci.uci_section* _get_section(self, config, section):
+    cdef cuci.uci_section* _get_section(self, config, section) except NULL:
         cdef cuci.uci_package* p = self._get_package(config)
 
         # look up the section
@@ -76,7 +76,7 @@ cdef class UCI:
 
         return s
 
-    cdef cuci.uci_option* _get_option(self, config, section, option):
+    cdef cuci.uci_option* _get_option(self, config, section, option) except NULL:
         cdef cuci.uci_section *s = self._get_section(config, section)
 
         # look up the option
