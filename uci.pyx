@@ -39,6 +39,13 @@ cdef int _next_element(cuci.uci_list* l, cuci.uci_element** e):
         return 0
 
 
+cdef object _list_names(cuci.uci_list* l):
+    cdef object names = []
+    cdef cuci.uci_element* e = NULL
+    while _next_element(l, &e):
+        names.append(e.name)
+    return names
+
 cdef class UCI:
 
     cdef cuci.uci_context* _ctx
@@ -98,7 +105,7 @@ cdef class UCI:
         cdef char **p = c_configs
         while p[0] is not NULL:
             configs.append(p[0])
-            p = p + 1
+            p += 1
 
         return configs
 
@@ -116,13 +123,7 @@ cdef class UCI:
         '''list of sections in config'''
 
         cdef cuci.uci_package* p = self._get_package(config)
-
-        cdef cuci.uci_element* e = NULL
-        cdef object sections = []
-        while _next_element(&p.sections, &e):
-            sections.append(e.name)
-
-        return sections
+        return _list_names(&p.sections)
 
     def has_section(self, config, section):
         '''indicates whether the named section exists'''
@@ -138,13 +139,7 @@ cdef class UCI:
         '''list of options in section'''
 
         cdef cuci.uci_section* s = self._get_section(config, section)
-
-        cdef cuci.uci_element* e = NULL
-        cdef object options = []
-        while _next_element(&s.options, &e):
-            options.append(e.name)
-
-        return options
+        return _list_names(&s.options)
 
     def has_option(self, config, section, option):
         '''indicates whether the section has the named option'''
