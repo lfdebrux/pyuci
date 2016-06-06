@@ -54,6 +54,8 @@ cdef class UCI:
 
     def __init__(self, confdir=None):
         if confdir is not None:
+            if not os.path.exists(confdir):
+                raise ValueError('path %r does not exist' % confdir)
             cuci.uci_set_confdir(self._ctx, confdir)
 
     cdef cuci.uci_package* _get_package(self, config) except NULL:
@@ -86,20 +88,29 @@ cdef class UCI:
 
         return o
 
-    cdef object _get_option_value(self, cuci.uci_option* o):
-        cdef object option_value
-        cdef cuci.uci_element* e = NULL # cython complains if we don't put this here
-        if o.type == cuci.UCI_TYPE_STRING:
-            option_value = o.v.string
-            return option_value
-        elif o.type == cuci.UCI_TYPE_LIST:
-            option_value = []
-            while _next_element(&o.v.list, &e):
-                option_value.append(e.name)
-            return option_value
+    def configs(self):
+        '''list of configs'''
+        cdef char **c_configs = NULL
+        if cuci.uci_list_configs(self._ctx, &c_configs) != 0 or c_configs == NULL:
+            raise RuntimeError('unable to list configs')
+
+        cdef object configs = []
+        cdef char **p = c_configs
+        while p[0] is not NULL:
+            configs.append(p[0])
+            p = p + 1
+
+        return configs
+
+    def has_config(self, config):
+        '''indicates whether the named config exists'''
+
+        try:
+            self._get_package(config)
+        except NoConfigError:
+            return False
         else:
-            # parsing error?
-            raise RuntimeError('option has invalid UCI_TYPE')
+            return True
 
     def sections(self, config):
         '''list of sections in config'''
@@ -145,6 +156,21 @@ cdef class UCI:
         else:
             return True
 
+    cdef object _get_option_value(self, cuci.uci_option* o):
+        cdef object option_value
+        cdef cuci.uci_element* e = NULL # cython complains if we don't put this here
+        if o.type == cuci.UCI_TYPE_STRING:
+            option_value = o.v.string
+            return option_value
+        elif o.type == cuci.UCI_TYPE_LIST:
+            option_value = []
+            while _next_element(&o.v.list, &e):
+                option_value.append(e.name)
+            return option_value
+        else:
+            # parsing error?
+            raise RuntimeError('option has invalid UCI_TYPE')
+
     def items(self, config, section):
         '''return a list of (name, value) pairs for each option in the section'''
 
@@ -165,3 +191,13 @@ cdef class UCI:
         # look up the option
         cdef cuci.uci_option* o = self._get_option(config, section, option)
         return self._get_option_value(o)
+
+    # valid boolean values laid out at https://wiki.openwrt.org/doc/uci
+    _boolean_states = {'1': True, 'yes': True, 'on': True, 'true': True, 'enabled': True,
+                       '0': False, 'no': False, 'off': False, 'false': False, 'disabled': False}
+
+    def getboolean(self, config, section, option):
+        v = self.get(config, section, option)
+        if not isinstance(v, str) or v.lower() not in self._boolean_states:
+            raise ValueError('Not a boolean')
+        return self._boolean_states[v.lower()]

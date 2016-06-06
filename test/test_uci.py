@@ -10,6 +10,9 @@ class TestUCI(unittest.TestCase):
     def setUp(self):
         self.c = uci.UCI(CONFDIR)
 
+    def test_bad_confdir(self):
+        self.assertRaises(ValueError, uci.UCI, 'notadir')
+
     def test_no_config(self):
         self.assertRaises(uci.NoConfigError, self.c.get, 'foo', 'bar', 'baz')
 
@@ -23,6 +26,13 @@ class TestUCI(unittest.TestCase):
 
     def test_none_argument(self):
         self.assertRaises(TypeError, self.c.get, None, None, None)
+
+    def test_configs(self):
+        self.assertEqual(self.c.configs(), ['example', 'network'])
+
+    def test_has_config(self):
+        self.assertTrue(self.c.has_config('example'))
+        self.assertFalse(self.c.has_config('foo'))
 
     def test_sections(self):
         self.assertEqual(self.c.sections('example'), ['test'])
@@ -54,6 +64,11 @@ class TestUCI(unittest.TestCase):
     def test_get_list(self):
         l = self.c.get('example', 'test', 'collection')
         self.assertEqual(l, ['first item', 'second item'])
+
+    def test_getboolean(self):
+        self.assertTrue(self.c.getboolean('example', 'test', 'boolean'))
+        self.assertRaises(ValueError, self.c.getboolean, 'example', 'test', 'string')
+        self.assertRaises(ValueError, self.c.getboolean, 'example', 'test', 'collection')
 
 if __name__ == '__main__':
     unittest.main()

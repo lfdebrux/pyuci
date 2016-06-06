@@ -15,6 +15,7 @@ cdef extern from "uci.h":
 	uci_option* uci_to_option(uci_element*)
 
 	# uci tree element types
+	#
 	cdef struct uci_context:
 		pass
 
@@ -40,6 +41,8 @@ cdef extern from "uci.h":
 	void uci_free_context(uci_context* ctx)
 
 	int uci_set_confdir(uci_context* ctx, const char* dir)
+
+	int uci_list_configs(uci_context* ctx, char*** list)
 
 	int uci_load(uci_context* ctx, const char* config_name, uci_package** package)
 	int uci_unload(uci_context* ctx, uci_package* package)
