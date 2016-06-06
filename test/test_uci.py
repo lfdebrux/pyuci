@@ -14,13 +14,27 @@ class TestUCI(unittest.TestCase):
         self.assertRaises(uci.NoConfigError, self.c.get, 'foo', 'bar', 'baz')
 
     def test_no_section(self):
-        self.assertRaises(uci.NoSectionError, self.c.get, 'example', 'bar', 'baz')
+        self.assertRaises(uci.NoSectionError, self.c.get,
+                          'example', 'bar', 'baz')
 
     def test_no_option(self):
-        self.assertRaises(uci.NoOptionError, self.c.get, 'example', 'test', 'baz')
+        self.assertRaises(uci.NoOptionError, self.c.get,
+                          'example', 'test', 'baz')
 
     def test_none_argument(self):
         self.assertRaises(TypeError, self.c.get, None, None, None)
+
+    def test_sections(self):
+        self.assertEqual(self.c.sections('example'), ['test'])
+
+    def test_has_section(self):
+        self.assertTrue(self.c.has_section('example', 'test'))
+        self.assertFalse(self.c.has_section('example', 'bar'))
+
+    def test_options(self):
+        self.assertEqual(
+                         self.c.options('example', 'test'),
+                         ['string', 'boolean', 'collection'])
 
     def test_has_option(self):
         self.assertTrue(self.c.has_option('example', 'test', 'string'))
@@ -40,10 +54,6 @@ class TestUCI(unittest.TestCase):
     def test_get_list(self):
         l = self.c.get('example', 'test', 'collection')
         self.assertEqual(l, ['first item', 'second item'])
-
-    def test_options(self):
-        o = self.c.options('example', 'test')
-        self.assertEqual(o, ['string', 'boolean', 'collection'])
 
 if __name__ == '__main__':
     unittest.main()

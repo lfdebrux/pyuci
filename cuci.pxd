@@ -19,7 +19,7 @@ cdef extern from "uci.h":
 		pass
 
 	cdef struct uci_package:
-		pass
+		uci_list sections
 
 	cdef struct uci_section:
 		uci_list options

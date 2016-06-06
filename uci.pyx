@@ -101,6 +101,28 @@ cdef class UCI:
             # parsing error?
             raise RuntimeError('option has invalid UCI_TYPE')
 
+    def sections(self, config):
+        '''list of sections in config'''
+
+        cdef cuci.uci_package* p = self._get_package(config)
+
+        cdef cuci.uci_element* e = NULL
+        cdef object sections = []
+        while _next_element(&p.sections, &e):
+            sections.append(e.name)
+
+        return sections
+
+    def has_section(self, config, section):
+        '''indicates whether the named section exists'''
+
+        try:
+            self._get_section(config, section)
+        except NoSectionError:
+            return False
+        else:
+            return True
+
     def options(self, config, section):
         '''list of options in section'''
 
