@@ -1,3 +1,7 @@
+# (C) 2016 Laurence de Bruxelles <lfdebrux@gmail.com>
+#
+# SPDX-License-Identifier:    BSD-3-Clause
+
 from libcpp cimport bool
 
 cdef extern from "uci.h":

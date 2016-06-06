@@ -1,3 +1,7 @@
+# (C) 2016 Laurence de Bruxelles <lfdebrux@gmail.com>
+#
+# SPDX-License-Identifier:    BSD-3-Clause
+
 # cython: c_string_type=str, c_string_encoding=ascii
 # ^^ implicit string decoding
 
