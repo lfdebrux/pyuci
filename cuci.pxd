@@ -21,7 +21,7 @@ cdef extern from "uci.h":
 		pass
 
 	cdef struct uci_section:
-		pass
+		uci_list options
 
 	cdef enum uci_option_type:
 		UCI_TYPE_STRING = 0

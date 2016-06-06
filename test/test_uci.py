@@ -30,5 +30,9 @@ class TestUCI(unittest.TestCase):
         l = self.c.get('example', 'test', 'collection')
         self.assertEqual(l, ['first item', 'second item'])
 
+    def test_options(self):
+        o = self.c.options('example', 'test')
+        self.assertEqual(o, ['string', 'boolean', 'collection'])
+
 if __name__ == '__main__':
     unittest.main()

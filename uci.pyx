@@ -86,6 +86,18 @@ cdef class UCI:
 
         return o
 
+    def options(self, config, section):
+        '''list of options in section'''
+
+        cdef cuci.uci_section* s = self._get_section(config, section)
+
+        cdef cuci.uci_element* e = NULL
+        cdef object options = []
+        while _next_element(&s.options, &e):
+            options.append(e.name)
+
+        return options
+
     def get(self, config, section, option):
         '''get value of option'''
 
